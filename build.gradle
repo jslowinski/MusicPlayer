@@ -1,0 +1,36 @@
+ext {
+    lifecycleViewmodelComposeVersion = '1.0.0-alpha07'
+    coilVersion = '1.2.2'
+    accompanistCoilVersion = '0.13.0'
+    lifecycleKtxVersion = '2.3.1'
+    kotlinxCoroutinesAndroidVersion = '1.5.0'
+    kotlinxCoroutinesCoreVersion = '1.5.0'
+    exoplayerVersion = '2.14.1'
+    firebaseFirestoreVersion = '23.0.1'
+    firebaseStorageKtxVersion = '20.0.0'
+    hiltCompilerVersion = '1.0.0'
+}// Top-level build file where you can add configuration options common to all sub-projects/modules.
+buildscript {
+    ext {
+        compose_version = '1.0.0-beta09'
+        hilt_version = '2.37'
+        agp_version = '7.1.0-alpha02'
+        gradle_plugin_version = '1.5.10'
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:$agp_version"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$gradle_plugin_version"
+        classpath "com.google.dagger:hilt-android-gradle-plugin:$hilt_version"
+        classpath 'com.google.gms:google-services:4.3.8'
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
