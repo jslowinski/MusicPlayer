@@ -1,20 +1,25 @@
 package com.example.musicplayer.exoplayer
 
 import android.app.PendingIntent
+import android.content.Intent
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
+import android.support.v4.media.MediaDescriptionCompat
+import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.media.MediaBrowserServiceCompat
+import com.example.musicplayer.exoplayer.callbacks.MusicPlaybackPrepared
+import com.example.musicplayer.exoplayer.callbacks.MusicPlayerEventListener
 import com.example.musicplayer.exoplayer.callbacks.MusicPlayerNotificationListener
+import com.example.musicplayer.other.Constants.MEDIA_ROOT_ID
 import com.example.musicplayer.other.Constants.SERVICE_TAG
+import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
+import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.*
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -26,6 +31,9 @@ class MusicService : MediaBrowserServiceCompat() {
     @Inject
     lateinit var exoPlayer: SimpleExoPlayer
 
+    @Inject
+    lateinit var musicSource: MusicSource
+
     private lateinit var musicNotificationManger: MusicNotificationManger
 
     private val serviceJob = Job()
@@ -36,8 +44,22 @@ class MusicService : MediaBrowserServiceCompat() {
 
     var isForegroundService = false
 
+    private var currentPlayingSong: MediaMetadataCompat? = null
+
+    private var isPlayerInitialize = false
+
+    private lateinit var musicPlayerListener: MusicPlayerEventListener
+
+    companion object {
+        var currentSongDuration = 0L
+            private set
+    }
+
     override fun onCreate() {
         super.onCreate()
+        serviceScope.launch {
+            musicSource.fetchMediaData()
+        }
         val activityIntent = packageManager?.getLaunchIntentForPackage(packageName)?.let {
             PendingIntent.getActivity(this, 0, it, 0)
         }
@@ -54,17 +76,57 @@ class MusicService : MediaBrowserServiceCompat() {
             mediaSessionCompat.sessionToken,
             MusicPlayerNotificationListener(this),
         ) {
+            currentSongDuration = exoPlayer.duration
+        }
 
+        val musicPlaybackPrepared = MusicPlaybackPrepared(musicSource) {
+            currentPlayingSong = it
+            preparePlayer(
+                musicSource.songs,
+                it,
+                true
+            )
         }
 
         mediaSessionConnector = MediaSessionConnector(mediaSessionCompat)
+        mediaSessionConnector.setPlaybackPreparer(musicPlaybackPrepared)
+        mediaSessionConnector.setQueueNavigator(MusicQueueNavigator())
         mediaSessionConnector.setPlayer(exoPlayer)
+
+        musicPlayerListener = MusicPlayerEventListener(this)
+        exoPlayer.addListener(musicPlayerListener)
+        musicNotificationManger.showNotification(exoPlayer)
     }
 
+    private inner class MusicQueueNavigator : TimelineQueueNavigator(mediaSessionCompat) {
+        override fun getMediaDescription(player: Player, windowIndex: Int): MediaDescriptionCompat {
+            return musicSource.songs[windowIndex].description
+        }
+    }
+
+    private fun preparePlayer(
+        songs: List<MediaMetadataCompat>,
+        itemToPlay: MediaMetadataCompat?,
+        playNow: Boolean
+    ) {
+        val currentSongIndex = if (currentPlayingSong == null) 0 else songs.indexOf(itemToPlay)
+        exoPlayer.prepare()
+        exoPlayer.seekTo(currentSongIndex, 0L)
+        exoPlayer.playWhenReady = playNow
+    }
+
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        exoPlayer.stop()
+    }
 
     override fun onDestroy() {
         super.onDestroy()
         serviceScope.cancel()
+
+        exoPlayer.removeListener(musicPlayerListener)
+        exoPlayer.release()
     }
 
 
@@ -73,13 +135,30 @@ class MusicService : MediaBrowserServiceCompat() {
         clientUid: Int,
         rootHints: Bundle?
     ): BrowserRoot? {
-
+        return BrowserRoot(MEDIA_ROOT_ID, null)
     }
 
     override fun onLoadChildren(
         parentId: String,
         result: Result<MutableList<MediaBrowserCompat.MediaItem>>
     ) {
-
+        when (parentId) {
+            MEDIA_ROOT_ID -> {
+                val resultsSent = musicSource.whenReady { isInitalized ->
+                    if (isInitalized) {
+                        result.sendResult(musicSource.asMediaItems())
+                        if (!isPlayerInitialize && musicSource.songs.isNotEmpty()) {
+                            preparePlayer(musicSource.songs, musicSource.songs[0], false)
+                            isPlayerInitialize = false
+                        }
+                    } else {
+                        result.sendResult(null)
+                    }
+                }
+                if (!resultsSent) {
+                    result.detach()
+                }
+            }
+        }
     }
 }
