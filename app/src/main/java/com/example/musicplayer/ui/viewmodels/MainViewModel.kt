@@ -3,6 +3,7 @@ package com.example.musicplayer.ui.viewmodels
 
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat.METADATA_KEY_MEDIA_ID
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -21,34 +22,40 @@ class MainViewModel @Inject constructor(
     private val musicServiceConnection: MusicServiceConnection
 ) : ViewModel() {
 
+
     private val _mediaItems = MutableLiveData<Resource<List<Song>>>()
     val mediaItems: LiveData<Resource<List<Song>>> = _mediaItems
 
+    var mediaItemsTest = mutableStateOf<Resource<List<Song>>>(Resource.Loading())
+
     val isConnected = musicServiceConnection.isConnected
-    val networkFailure = musicServiceConnection.networkFailure
-    val nowPlayingSong = musicServiceConnection.nowPlaying
+    val networkError = musicServiceConnection.networkFailure
+    val curPlayingSong = musicServiceConnection.nowPlaying
     val playbackState = musicServiceConnection.playbackState
 
     init {
         _mediaItems.postValue(Resource.Loading(null))
-        musicServiceConnection.subscribe(MEDIA_ROOT_ID, object : MediaBrowserCompat.SubscriptionCallback(){
-            override fun onChildrenLoaded(
-                parentId: String,
-                children: MutableList<MediaBrowserCompat.MediaItem>
-            ) {
-                super.onChildrenLoaded(parentId, children)
-                val items = children.map { child ->
-                    Song(
-                        child.mediaId!!,
-                        child.description.title.toString(),
-                        child.description.subtitle.toString(),
-                        child.description.mediaUri.toString(),
-                        child.description.iconUri.toString()
-                    )
+        musicServiceConnection.subscribe(
+            MEDIA_ROOT_ID,
+            object : MediaBrowserCompat.SubscriptionCallback() {
+                override fun onChildrenLoaded(
+                    parentId: String,
+                    children: MutableList<MediaBrowserCompat.MediaItem>
+                ) {
+                    super.onChildrenLoaded(parentId, children)
+                    val items = children.map {
+                        Song(
+                            it.mediaId!!,
+                            it.description.title.toString(),
+                            it.description.subtitle.toString(),
+                            it.description.mediaUri.toString(),
+                            it.description.iconUri.toString()
+                        )
+                    }
+                    mediaItemsTest.value = Resource.Success(items)
+                    _mediaItems.postValue(Resource.Success(items))
                 }
-                _mediaItems.postValue(Resource.Success(items))
-            }
-        })
+            })
     }
 
     fun skipToNextSong() {
@@ -63,12 +70,14 @@ class MainViewModel @Inject constructor(
         musicServiceConnection.transportController.seekTo(pos)
     }
 
-    fun playMedia(mediaItem: Song, pauseAllowed: Boolean = false) {
+    fun playOrToggleSong(mediaItem: Song, toggle: Boolean = false) {
         val isPrepared = playbackState.value?.isPrepared ?: false
-        if (isPrepared && mediaItem.mediaId == nowPlayingSong.value?.getString(METADATA_KEY_MEDIA_ID)) {
+        if (isPrepared && mediaItem.mediaId ==
+            curPlayingSong.value?.getString(METADATA_KEY_MEDIA_ID)
+        ) {
             playbackState.value?.let { playbackState ->
                 when {
-                    playbackState.isPlaying -> if (pauseAllowed) musicServiceConnection.transportController.pause()
+                    playbackState.isPlaying -> if (toggle) musicServiceConnection.transportController.pause()
                     playbackState.isPlayEnabled -> musicServiceConnection.transportController.play()
                     else -> Unit
                 }
@@ -80,6 +89,8 @@ class MainViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        musicServiceConnection.unsubscribe(MEDIA_ROOT_ID, object : MediaBrowserCompat.SubscriptionCallback() {})
+        musicServiceConnection.unsubscribe(
+            MEDIA_ROOT_ID,
+            object : MediaBrowserCompat.SubscriptionCallback() {})
     }
 }

@@ -61,6 +61,7 @@ class MusicService : MediaBrowserServiceCompat() {
         serviceScope.launch {
             musicSource.fetchMediaData()
         }
+
         val activityIntent = packageManager?.getLaunchIntentForPackage(packageName)?.let {
             PendingIntent.getActivity(this, 0, it, 0)
         }
@@ -75,12 +76,12 @@ class MusicService : MediaBrowserServiceCompat() {
         musicNotificationManger = MusicNotificationManger(
             this,
             mediaSessionCompat.sessionToken,
-            MusicPlayerNotificationListener(this),
+            MusicPlayerNotificationListener(this)
         ) {
             currentSongDuration = exoPlayer.duration
         }
 
-        val musicPlaybackPrepared = MusicPlaybackPrepared(musicSource) {
+        val musicPlaybackPreparer = MusicPlaybackPrepared(musicSource) {
             currentPlayingSong = it
             preparePlayer(
                 musicSource.songs,
@@ -90,7 +91,7 @@ class MusicService : MediaBrowserServiceCompat() {
         }
 
         mediaSessionConnector = MediaSessionConnector(mediaSessionCompat)
-        mediaSessionConnector.setPlaybackPreparer(musicPlaybackPrepared)
+        mediaSessionConnector.setPlaybackPreparer(musicPlaybackPreparer)
         mediaSessionConnector.setQueueNavigator(MusicQueueNavigator())
         mediaSessionConnector.setPlayer(exoPlayer)
 
@@ -110,12 +111,11 @@ class MusicService : MediaBrowserServiceCompat() {
         itemToPlay: MediaMetadataCompat?,
         playNow: Boolean
     ) {
-        val currentSongIndex = if (currentPlayingSong == null) 0 else songs.indexOf(itemToPlay)
-        exoPlayer.prepare()
-        exoPlayer.seekTo(currentSongIndex, 0L)
+        val curSongIndex = if(currentPlayingSong == null) 0 else songs.indexOf(itemToPlay)
+        exoPlayer.prepare(musicSource.asMediaSource(dataSourceFactory))
+        exoPlayer.seekTo(curSongIndex, 0L)
         exoPlayer.playWhenReady = playNow
     }
-
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
@@ -130,7 +130,6 @@ class MusicService : MediaBrowserServiceCompat() {
         exoPlayer.release()
     }
 
-
     override fun onGetRoot(
         clientPackageName: String,
         clientUid: Int,
@@ -143,21 +142,21 @@ class MusicService : MediaBrowserServiceCompat() {
         parentId: String,
         result: Result<MutableList<MediaBrowserCompat.MediaItem>>
     ) {
-        when (parentId) {
+        when(parentId) {
             MEDIA_ROOT_ID -> {
-                val resultsSent = musicSource.whenReady { isInitalized ->
-                    if (isInitalized) {
+                val resultsSent = musicSource.whenReady { isInitialized ->
+                    if(isInitialized) {
                         result.sendResult(musicSource.asMediaItems())
-                        if (!isPlayerInitialize && musicSource.songs.isNotEmpty()) {
+                        if(!isPlayerInitialize && musicSource.songs.isNotEmpty()) {
                             preparePlayer(musicSource.songs, musicSource.songs[0], false)
-                            isPlayerInitialize = false
+                            isPlayerInitialize = true
                         }
                     } else {
                         mediaSessionCompat.sendSessionEvent(NETWORK_FAILURE, null)
                         result.sendResult(null)
                     }
                 }
-                if (!resultsSent) {
+                if(!resultsSent) {
                     result.detach()
                 }
             }

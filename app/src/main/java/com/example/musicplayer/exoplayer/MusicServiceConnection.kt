@@ -14,8 +14,7 @@ import com.example.musicplayer.other.Event
 import com.example.musicplayer.other.Resource
 
 class MusicServiceConnection(
-    context: Context,
-    serviceComponent: ComponentName
+    context: Context
 ) {
     private val _isConnected = MutableLiveData<Event<Resource<Boolean>>>()
     val isConnected: LiveData<Event<Resource<Boolean>>> = _isConnected
@@ -37,7 +36,10 @@ class MusicServiceConnection(
     private val mediaBrowserConnectionCallback = MediaBrowserConnectionCallback(context)
     private val mediaBrowser = MediaBrowserCompat(
         context,
-        serviceComponent,
+        ComponentName(
+            context,
+            MusicService::class.java
+        ),
         mediaBrowserConnectionCallback,
         null
     ).apply { connect() }
