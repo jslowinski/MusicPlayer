@@ -112,7 +112,8 @@ class MusicService : MediaBrowserServiceCompat() {
         playNow: Boolean
     ) {
         val curSongIndex = if(currentPlayingSong == null) 0 else songs.indexOf(itemToPlay)
-        exoPlayer.prepare(musicSource.asMediaSource(dataSourceFactory))
+        exoPlayer.setMediaSource(musicSource.asMediaSource(dataSourceFactory))
+        exoPlayer.prepare()
         exoPlayer.seekTo(curSongIndex, 0L)
         exoPlayer.playWhenReady = playNow
     }
@@ -125,7 +126,6 @@ class MusicService : MediaBrowserServiceCompat() {
     override fun onDestroy() {
         super.onDestroy()
         serviceScope.cancel()
-
         exoPlayer.removeListener(musicPlayerListener)
         exoPlayer.release()
     }

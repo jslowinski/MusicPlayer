@@ -1,19 +1,15 @@
 package com.example.musicplayer.di
 
-import android.content.ComponentName
 import android.content.Context
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import com.example.musicplayer.R
-import com.example.musicplayer.data.remote.MusicDatabase
-import com.example.musicplayer.exoplayer.MusicService
 import com.example.musicplayer.exoplayer.MusicServiceConnection
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.android.scopes.ServiceScoped
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 

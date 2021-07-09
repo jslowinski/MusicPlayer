@@ -15,6 +15,8 @@ import com.example.musicplayer.exoplayer.isPrepared
 import com.example.musicplayer.other.Constants.MEDIA_ROOT_ID
 import com.example.musicplayer.other.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,19 +24,18 @@ class MainViewModel @Inject constructor(
     private val musicServiceConnection: MusicServiceConnection
 ) : ViewModel() {
 
-
-    private val _mediaItems = MutableLiveData<Resource<List<Song>>>()
-    val mediaItems: LiveData<Resource<List<Song>>> = _mediaItems
-
-    var mediaItemsTest = mutableStateOf<Resource<List<Song>>>(Resource.Loading())
+    var mediaItems = mutableStateOf<Resource<List<Song>>>(Resource.Loading(null))
 
     val isConnected = musicServiceConnection.isConnected
     val networkError = musicServiceConnection.networkFailure
     val curPlayingSong = musicServiceConnection.nowPlaying
+
+    val currentPlayingSong = musicServiceConnection.currentPlayingSong
+
     val playbackState = musicServiceConnection.playbackState
 
     init {
-        _mediaItems.postValue(Resource.Loading(null))
+        mediaItems.value = (Resource.Loading(null))
         musicServiceConnection.subscribe(
             MEDIA_ROOT_ID,
             object : MediaBrowserCompat.SubscriptionCallback() {
@@ -52,8 +53,7 @@ class MainViewModel @Inject constructor(
                             it.description.iconUri.toString()
                         )
                     }
-                    mediaItemsTest.value = Resource.Success(items)
-                    _mediaItems.postValue(Resource.Success(items))
+                    mediaItems.value = Resource.Success(items)
                 }
             })
     }
@@ -73,12 +73,17 @@ class MainViewModel @Inject constructor(
     fun playOrToggleSong(mediaItem: Song, toggle: Boolean = false) {
         val isPrepared = playbackState.value?.isPrepared ?: false
         if (isPrepared && mediaItem.mediaId ==
-            curPlayingSong.value?.getString(METADATA_KEY_MEDIA_ID)
+            currentPlayingSong.value?.getString(METADATA_KEY_MEDIA_ID)
+//            curPlayingSong.value?.getString(METADATA_KEY_MEDIA_ID)
         ) {
             playbackState.value?.let { playbackState ->
                 when {
-                    playbackState.isPlaying -> if (toggle) musicServiceConnection.transportController.pause()
-                    playbackState.isPlayEnabled -> musicServiceConnection.transportController.play()
+                    playbackState.isPlaying -> {
+                        if (toggle) musicServiceConnection.transportController.pause()
+                    }
+                    playbackState.isPlayEnabled -> {
+                        musicServiceConnection.transportController.play()
+                    }
                     else -> Unit
                 }
             }

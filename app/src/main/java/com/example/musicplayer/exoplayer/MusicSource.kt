@@ -5,6 +5,7 @@ import android.support.v4.media.MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.MediaMetadataCompat.*
+import com.example.musicplayer.data.entities.Song
 import com.example.musicplayer.data.remote.MusicDatabase
 import com.example.musicplayer.exoplayer.State.*
 import com.google.android.exoplayer2.MediaItem
@@ -21,11 +22,13 @@ class MusicSource @Inject constructor(
 ) {
 
     var songs = emptyList<MediaMetadataCompat>()
+    var songsTest: List<Song> = emptyList()
 
     suspend fun fetchMediaData() = withContext(Dispatchers.Main) {
         state = STATE_INITIALIZING
         Dispatchers.IO
         val allSongs = musicDatabase.getAllSongs()
+        songsTest = allSongs
         songs = allSongs.map { song ->
             MediaMetadataCompat.Builder()
                 .putString(METADATA_KEY_TITLE, song.title)

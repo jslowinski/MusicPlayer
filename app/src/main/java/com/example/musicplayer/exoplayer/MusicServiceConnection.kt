@@ -7,11 +7,14 @@ import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.example.musicplayer.data.entities.Song
 import com.example.musicplayer.other.Constants.NETWORK_FAILURE
 import com.example.musicplayer.other.Event
 import com.example.musicplayer.other.Resource
+import javax.inject.Inject
 
 class MusicServiceConnection(
     context: Context
@@ -24,6 +27,8 @@ class MusicServiceConnection(
 
     private val _playbackState = MutableLiveData<PlaybackStateCompat?>()
     val playbackState: LiveData<PlaybackStateCompat?> = _playbackState
+
+    var currentPlayingSong = mutableStateOf<MediaMetadataCompat?>(null)
 
     private val _nowPlaying = MutableLiveData<MediaMetadataCompat?>()
     val nowPlaying: LiveData<MediaMetadataCompat?> = _nowPlaying
@@ -97,6 +102,8 @@ class MusicServiceConnection(
         }
 
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
+            super.onMetadataChanged(metadata)
+            currentPlayingSong.value = metadata
             _nowPlaying.postValue(metadata)
         }
 
