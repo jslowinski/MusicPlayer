@@ -1,5 +1,6 @@
 package com.example.musicplayer.ui.home
 
+import android.support.v4.media.session.PlaybackStateCompat
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -8,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.PauseCircleFilled
 import androidx.compose.material.icons.rounded.PlayCircleFilled
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
@@ -42,49 +44,31 @@ import timber.log.Timber
 
 @Composable
 fun HomeScreen(
-    navController: NavController,
     viewModel: MainViewModel = hiltViewModel()
 ) {
 
     Surface(modifier = Modifier.fillMaxSize()) {
         HomeContent(
             modifier = Modifier.fillMaxSize(),
-            music = viewModel.mediaItems.value
+            music = viewModel.mediaItems.value,
+            viewModel = viewModel
         )
     }
 }
 
 
 @Composable
-fun HomeAppBar(
-    backgroundColor: Color,
-    modifier: Modifier = Modifier
-) {
-    TopAppBar(
-        title = {
-            Row {
-                Image(
-                    painter = painterResource(R.drawable.ic_logo),
-                    contentDescription = null
-                )
-                Text(text = "MusicPlayer")
-            }
-        },
-        backgroundColor = backgroundColor,
-        actions = {
-            CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
-            }
-        },
-        modifier = modifier
-    )
-}
-
-@Composable
 fun HomeContent(
     modifier: Modifier = Modifier,
     music: Resource<List<Song>>,
-    viewModel: MainViewModel = hiltViewModel()
+    viewModel: MainViewModel
 ) {
+    val currentPlayingSong by remember {
+        viewModel.currentPlayingSong
+    }
+
+    val playbackState by viewModel.playbackState.observeAsState()
+
     Column(modifier = modifier) {
         val appBarColor = MaterialTheme.colors.surface.copy(alpha = 0.87f)
         Spacer(
@@ -108,50 +92,37 @@ fun HomeContent(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color.White)
+                            .background(MaterialTheme.colors.background)
                             .padding(bottom = 60.dp)
                             .align(Alignment.TopCenter)
                     ) {
                         items(music.data!!) {
                             MusicListItem(
-                                song = it,
-                                modifier = Modifier
-                                    .fillMaxWidth()
+                                viewModel = viewModel,
+                                song = it
                             )
                         }
-                    }
-
-                    if (viewModel.currentPlayingSong.value != null) {
-                        HomeBottomBar(
-                            Modifier
-                                .fillMaxWidth()
-                                .height(60.dp)
-                                .align(Alignment.BottomCenter)
-                                .clickable(
-                                    onClick = {
-                                        println(viewModel.currentPlayingSong.value!!.description.title)
-                                    }
-                                ),
-                            viewModel,
-                            viewModel.currentPlayingSong.value!!.toSong()!!
-                        )
                     }
                 }
             }
             is Resource.Loading -> {
-                CircularProgressIndicator(
-                    color = MaterialTheme.colors.primary,
-                    modifier = Modifier
-                        .size(100.dp)
-                        .align(Alignment.CenterHorizontally)
-                        .fillMaxHeight()
-                        .padding(
-                            top = 16.dp,
-                            start = 16.dp,
-                            end = 16.dp,
-                            bottom = 16.dp
-                        )
-                )
+                Box(modifier = Modifier.fillMaxSize()) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colors.onBackground,
+                        modifier = Modifier
+                            .size(100.dp)
+                            .fillMaxHeight()
+
+                            .align(Alignment.Center)
+                            .padding(
+                                top = 16.dp,
+                                start = 16.dp,
+                                end = 16.dp,
+                                bottom = 16.dp
+                            )
+                    )
+                }
+
             }
             is Resource.Error -> TODO()
         }
@@ -160,20 +131,19 @@ fun HomeContent(
 
 @Composable
 fun MusicListItem(
-    viewModel: MainViewModel = hiltViewModel(),
-    song: Song,
-    modifier: Modifier = Modifier
+    viewModel: MainViewModel,
+    song: Song
 ) {
     ConstraintLayout(
         modifier = Modifier
             .clickable {
                 viewModel.playOrToggleSong(song)
+                viewModel.showPlayerFullScreen = true
             }
             .fillMaxWidth()
     ) {
         val (
-            divider, songTitle, songSubtitle, image, playIcon,
-            date
+            divider, songTitle, songSubtitle, image, playIcon
         ) = createRefs()
 
         Divider(
@@ -195,6 +165,7 @@ fun MusicListItem(
                 .constrainAs(image) {
                     end.linkTo(parent.end, 16.dp)
                     top.linkTo(parent.top, 16.dp)
+                    bottom.linkTo(parent.bottom, 16.dp)
                 }
         )
 
@@ -211,12 +182,10 @@ fun MusicListItem(
                     bias = 0f
                 )
                 top.linkTo(parent.top, 16.dp)
-
+                start.linkTo(parent.start, 16.dp)
                 width = Dimension.preferredWrapContent
             }
         )
-
-        val titleImageBarrier = createBottomBarrier(songSubtitle, image)
 
         CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
             Text(
@@ -232,33 +201,10 @@ fun MusicListItem(
                         bias = 0f
                     )
                     top.linkTo(songTitle.bottom, 6.dp)
-
+                    start.linkTo(parent.start, 16.dp)
                     width = Dimension.preferredWrapContent
                 }
             )
         }
-
-        Image(
-            imageVector = Icons.Rounded.PlayCircleFilled,
-            contentDescription = stringResource(id = R.string.cd_play),
-            contentScale = ContentScale.Fit,
-            colorFilter = ColorFilter.tint(LocalContentColor.current),
-            modifier = Modifier
-                .clickable(
-                    interactionSource = remember {
-                        MutableInteractionSource()
-                    },
-                    indication = rememberRipple(
-                        bounded = false,
-                        radius = 24.dp
-                    )
-                ) { /* TODO */ }
-                .size(36.dp)
-                .constrainAs(playIcon) {
-                    start.linkTo(parent.start, 24.dp)
-                    top.linkTo(titleImageBarrier, margin = 16.dp)
-                    bottom.linkTo(parent.bottom, 16.dp)
-                }
-        )
     }
 }

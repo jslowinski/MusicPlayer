@@ -3,7 +3,9 @@ package com.example.musicplayer.ui.viewmodels
 
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat.METADATA_KEY_MEDIA_ID
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -26,11 +28,16 @@ class MainViewModel @Inject constructor(
 
     var mediaItems = mutableStateOf<Resource<List<Song>>>(Resource.Loading(null))
 
+    var showPlayerFullScreen by mutableStateOf(false)
+
     val isConnected = musicServiceConnection.isConnected
     val networkError = musicServiceConnection.networkFailure
     val curPlayingSong = musicServiceConnection.nowPlaying
 
     val currentPlayingSong = musicServiceConnection.currentPlayingSong
+
+    val songIsPlaying: Boolean
+        get() = playbackState.value?.isPlaying == true
 
     val playbackState = musicServiceConnection.playbackState
 
@@ -58,6 +65,8 @@ class MainViewModel @Inject constructor(
             })
     }
 
+
+
     fun skipToNextSong() {
         musicServiceConnection.transportController.skipToNext()
     }
@@ -66,8 +75,8 @@ class MainViewModel @Inject constructor(
         musicServiceConnection.transportController.skipToPrevious()
     }
 
-    fun seekTo(pos: Long) {
-        musicServiceConnection.transportController.seekTo(pos)
+    fun seekTo(pos: Float) {
+        musicServiceConnection.transportController.seekTo(pos.toLong())
     }
 
     fun playOrToggleSong(mediaItem: Song, toggle: Boolean = false) {

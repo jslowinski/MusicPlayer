@@ -1,9 +1,7 @@
 package com.example.musicplayer.ui.home
 
-import android.graphics.drawable.Drawable
-import android.graphics.drawable.Icon
-import android.support.v4.media.MediaMetadataCompat
-import android.support.v4.media.session.PlaybackStateCompat.STATE_NONE
+
+import android.support.v4.media.session.PlaybackStateCompat
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.*
@@ -15,85 +13,74 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.consumeAllChanges
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.distinctUntilChanged
 import com.example.musicplayer.R
 import com.example.musicplayer.data.entities.Song
 import com.example.musicplayer.exoplayer.isPlaying
-import com.example.musicplayer.other.Resource
+import com.example.musicplayer.exoplayer.toSong
 import com.example.musicplayer.ui.viewmodels.MainViewModel
 import com.google.accompanist.coil.rememberCoilPainter
-import com.google.accompanist.imageloading.isFinalState
-import com.google.accompanist.insets.navigationBarsPadding
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
 
-
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun HomeBottomBar(
     modifier: Modifier = Modifier,
-    viewModel: MainViewModel = hiltViewModel(),
-    songs: Song,
+    viewModel: MainViewModel = hiltViewModel()
 ) {
-    HomeBottomBarContent(viewModel, songs)
-}
-
-
-@Composable
-fun HomeBottomBarContent(
-    viewModel: MainViewModel,
-    song: Song,
-) {
-
 
     var offsetX by remember { mutableStateOf(0f) }
+    val currentSong = viewModel.currentPlayingSong.value
+    val playbackStateCompat by viewModel.playbackState.observeAsState()
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragEnd = {
-                        when {
-                            offsetX > 0 -> {
-                                viewModel.skipToPreviousSong()
-                            }
-                            offsetX < 0 -> {
-                                viewModel.skipToNextSong()
-                            }
-                        }
-                    },
-                    onDrag = { change, dragAmount ->
-                        change.consumeAllChanges()
-                        val (x, y) = dragAmount
-                        offsetX = x
-                    }
-                )
-
-            }
-            .background(Color.LightGray)
+    AnimatedVisibility(
+        visible = currentSong != null,
+        modifier = modifier
     ) {
-        HomeBottomBarItem(song = song, viewModel)
+        if (currentSong != null) {
+            val song = currentSong.toSong()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .pointerInput(Unit) {
+                        detectDragGestures(
+                            onDragEnd = {
+                                when {
+                                    offsetX > 0 -> {
+                                        viewModel.skipToPreviousSong()
+                                    }
+                                    offsetX < 0 -> {
+                                        viewModel.skipToNextSong()
+                                    }
+                                }
+                            },
+                            onDrag = { change, dragAmount ->
+                                change.consumeAllChanges()
+                                val (x, y) = dragAmount
+                                offsetX = x
+                            }
+                        )
+
+                    }
+                    .background(Color.LightGray),
+            ) {
+                HomeBottomBarItem(
+                    song = song!!,
+                    playbackStateCompat =playbackStateCompat,
+                    viewModel = viewModel)
+            }
+        }
     }
 }
 
@@ -101,16 +88,16 @@ fun HomeBottomBarContent(
 @Composable
 fun HomeBottomBarItem(
     song: Song,
+    playbackStateCompat: PlaybackStateCompat?,
     viewModel: MainViewModel
 ) {
-    val playbackState by viewModel.playbackState.observeAsState()
 
 
     Box(
         modifier = Modifier
             .height(64.dp)
             .clickable(onClick = {
-                println(song.title)
+                viewModel.showPlayerFullScreen = true
             })
 
     ) {
@@ -156,7 +143,7 @@ fun HomeBottomBarItem(
                 )
             }
             val painter = rememberCoilPainter(
-                request = if (playbackState?.isPlaying == false) {
+                request = if (playbackStateCompat?.isPlaying == false) {
                     R.drawable.ic_round_play_arrow
                 } else {
                     R.drawable.ic_round_pause

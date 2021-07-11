@@ -30,9 +30,10 @@ class MusicNotificationManger(
             context,
             NOTIFICATION_ID,
             NOTIFICATION_CHANNEL_ID,
-            DescriptionAdapter(mediaController),
-
-            ).setSmallIconResourceId(R.drawable.ic_music)
+            DescriptionAdapter(mediaController)
+            )
+            .setSmallIconResourceId(R.drawable.ic_music)
+            .setNotificationListener(notificationListener)
             .build()
         notificationManager.setMediaSessionToken(sessionToken)
     }
@@ -46,6 +47,7 @@ class MusicNotificationManger(
     ) : PlayerNotificationManager.MediaDescriptionAdapter {
 
         override fun getCurrentContentTitle(player: Player): CharSequence {
+            newSongCallback()
             return mediaController.metadata.description.title.toString()
         }
 
