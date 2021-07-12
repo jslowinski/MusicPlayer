@@ -4,16 +4,16 @@ package com.example.musicplayer.ui.home
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.*
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -73,12 +73,17 @@ fun HomeBottomBar(
                         )
 
                     }
-                    .background(Color.LightGray),
+                    .background(
+                        if (!isSystemInDarkTheme()) {
+                            Color.LightGray
+                        } else Color.DarkGray
+                    ),
             ) {
                 HomeBottomBarItem(
                     song = song!!,
-                    playbackStateCompat =playbackStateCompat,
-                    viewModel = viewModel)
+                    playbackStateCompat = playbackStateCompat,
+                    viewModel = viewModel
+                )
             }
         }
     }
@@ -147,7 +152,8 @@ fun HomeBottomBarItem(
                     R.drawable.ic_round_play_arrow
                 } else {
                     R.drawable.ic_round_pause
-                })
+                }
+            )
 
             Image(
                 painter = painter,

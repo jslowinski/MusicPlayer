@@ -92,6 +92,9 @@ dependencies {
 
     // Coil
     implementation "io.coil-kt:coil:$coilVersion"
+
+    //Accompanist
+    implementation "com.google.accompanist:accompanist-systemuicontroller:$accompanistCoilVersion"
     implementation "com.google.accompanist:accompanist-coil:$accompanistCoilVersion"
 
     // Glide

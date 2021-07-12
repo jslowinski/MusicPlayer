@@ -4,9 +4,12 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Android Projects/MusicPlayer/app/src/main/res/drawable/ic_image.xml" value="0.124" />
+        <entry key="..\:/Android Projects/MusicPlayer/app/src/main/res/drawable/ic_launcher_background.xml" value="0.1" />
         <entry key="..\:/Android Projects/MusicPlayer/app/src/main/res/drawable/ic_logo.xml" value="0.1" />
+        <entry key="..\:/Android Projects/MusicPlayer/app/src/main/res/drawable/ic_logo__1_.xml" value="0.147" />
         <entry key="..\:/Android Projects/MusicPlayer/app/src/main/res/drawable/ic_music.xml" value="0.1385" />
         <entry key="..\:/Android Projects/MusicPlayer/app/src/main/res/drawable/ic_round_pause.xml" value="0.141" />
+        <entry key="..\:/Android Projects/MusicPlayer/app/src/main/res/drawable/ic_round_play_arrow.xml" value="0.1" />
       </map>
     </option>
   </component>

@@ -4,10 +4,8 @@ import android.graphics.Bitmap
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.OnBackPressedDispatcher
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,9 +21,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -41,6 +39,7 @@ import coil.transform.Transformation
 import com.example.musicplayer.R
 import com.example.musicplayer.data.entities.Song
 import com.example.musicplayer.exoplayer.toSong
+import com.example.musicplayer.ui.theme.roundedShape
 import com.example.musicplayer.ui.viewmodels.MainViewModel
 import com.example.musicplayer.ui.viewmodels.SongViewModel
 import com.google.accompanist.coil.rememberCoilPainter
@@ -140,6 +139,8 @@ fun SongScreenBody(
     val iconResId =
         if (mainViewModel.songIsPlaying) R.drawable.ic_round_pause else R.drawable.ic_round_play_arrow
 
+    val isSongPlaying = mainViewModel.songIsPlaying
+
     var sliderIsChanging by remember { mutableStateOf(false) }
 
     var localSliderValue by remember { mutableStateOf(0f) }
@@ -169,6 +170,7 @@ fun SongScreenBody(
         }
         SongScreenContent(
             song = song,
+            isSongPlaying = isSongPlaying,
             imagePainter = imagePainter,
             dominantColor = dominantColor,
             playbackProgress = sliderProgress,
@@ -220,6 +222,7 @@ fun SongScreenBody(
 @Composable
 fun SongScreenContent(
     song: Song,
+    isSongPlaying: Boolean,
     imagePainter: Painter,
     dominantColor: Color,
     playbackProgress: Float,
@@ -303,15 +306,16 @@ fun SongScreenContent(
                                 .clip(MaterialTheme.shapes.medium)
                                 .weight(1f, fill = false)
                                 .aspectRatio(1f)
-                                .background(MaterialTheme.colors.onBackground.copy(alpha = 0.08f))
+
                         ) {
-                            Image(
-                                painter = imagePainter,
-                                contentDescription = "Song thumbnail",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                            )
+//                            Image(
+//                                painter = imagePainter,
+//                                contentDescription = "Song thumbnail",
+//                                contentScale = ContentScale.Crop,
+//                                modifier = Modifier
+//                                    .fillMaxSize()
+//                            )
+                            VinylAnimation(painter = imagePainter, isSongPlaying = isSongPlaying)
                         }
 
                         Text(
@@ -426,7 +430,83 @@ fun SongScreenContent(
             }
         }
     }
+}
 
+@Composable
+fun Vinyl(
+    modifier: Modifier = Modifier,
+    rotationDegrees: Float = 0f,
+    painter: Painter
+) {
+    Box(
+        modifier = modifier
+            .aspectRatio(1.0f)
+            .clip(roundedShape)
+    ) {
+        // Vinyl background
+        Image(
+            modifier = Modifier
+                .fillMaxSize()
+                .rotate(rotationDegrees),
+            painter = painterResource(id = R.drawable.vinyl_background),
+            contentDescription = "Vinyl Background"
+        )
+
+        // Vinyl song cover
+        Image(
+            modifier = Modifier
+                .fillMaxSize(0.5f)
+                .rotate(rotationDegrees)
+                .aspectRatio(1.0f)
+                .align(Alignment.Center)
+                .clip(roundedShape),
+            painter = painter,
+            contentDescription = "Song cover"
+        )
+    }
+}
+
+@Composable
+fun VinylAnimation(
+    modifier: Modifier = Modifier,
+    isSongPlaying: Boolean = true,
+    painter: Painter
+) {
+    var currentRotation by remember {
+        mutableStateOf(0f)
+    }
+
+    val rotation = remember {
+        Animatable(currentRotation)
+    }
+
+    LaunchedEffect(isSongPlaying) {
+        if (isSongPlaying) {
+            rotation.animateTo(
+                targetValue = currentRotation + 360f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(3000, easing = LinearEasing),
+                    repeatMode = RepeatMode.Restart
+                )
+            ) {
+                currentRotation = value
+            }
+        } else {
+            if (currentRotation > 0f) {
+                rotation.animateTo(
+                    targetValue = currentRotation + 50,
+                    animationSpec = tween(
+                        1250,
+                        easing = LinearOutSlowInEasing
+                    )
+                ) {
+                    currentRotation = value
+                }
+            }
+        }
+    }
+
+    Vinyl(painter = painter, rotationDegrees = rotation.value)
 }
 
 
