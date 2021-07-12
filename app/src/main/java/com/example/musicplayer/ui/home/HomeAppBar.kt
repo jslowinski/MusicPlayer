@@ -23,13 +23,9 @@ fun HomeAppBar(
     TopAppBar(
         title = {
             Row {
-                Image(
-                    painter = painterResource(R.drawable.ic_logo),
-                    contentDescription = null
-                )
                 Text(
                     modifier = Modifier
-                        .padding(start = 16.dp),
+                        .padding(start = 8.dp),
                     text = "Music Player")
             }
         },
