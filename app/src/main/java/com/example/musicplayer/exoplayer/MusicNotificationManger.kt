@@ -34,6 +34,7 @@ class MusicNotificationManger(
             )
             .setSmallIconResourceId(R.drawable.ic_music)
             .setNotificationListener(notificationListener)
+            .setChannelNameResourceId(R.string.notification_channel_name)
             .build()
         notificationManager.setMediaSessionToken(sessionToken)
     }
