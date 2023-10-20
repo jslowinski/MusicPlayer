@@ -1,5 +1,6 @@
 package com.example.musicplayer.exoplayer.callbacks
 
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.content.Intent
 import androidx.core.content.ContextCompat
@@ -20,6 +21,7 @@ class MusicPlayerNotificationListener(
         }
     }
 
+    @SuppressLint("ForegroundServiceType")
     override fun onNotificationPosted(
         notificationId: Int,
         notification: Notification,
