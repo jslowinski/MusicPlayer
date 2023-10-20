@@ -65,7 +65,7 @@ class MusicService : MediaBrowserServiceCompat() {
         }
 
         val activityIntent = packageManager?.getLaunchIntentForPackage(packageName)?.let {
-            PendingIntent.getActivity(this, 0, it, 0)
+            PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_IMMUTABLE)
         }
 
         mediaSessionCompat = MediaSessionCompat(this, SERVICE_TAG).apply {
@@ -82,7 +82,7 @@ class MusicService : MediaBrowserServiceCompat() {
         ) {
             currentSongDuration = exoPlayer.duration
         }
-
+//
         val musicPlaybackPreparer = MusicPlaybackPrepared(musicSource) {
             currentPlayingSong = it
             preparePlayer(
@@ -96,7 +96,6 @@ class MusicService : MediaBrowserServiceCompat() {
         mediaSessionConnector.setPlaybackPreparer(musicPlaybackPreparer)
         mediaSessionConnector.setQueueNavigator(MusicQueueNavigator())
         mediaSessionConnector.setPlayer(exoPlayer)
-
         musicPlayerListener = MusicPlayerEventListener(this)
         exoPlayer.addListener(musicPlayerListener)
         musicNotificationManger.showNotification(exoPlayer)
@@ -136,7 +135,7 @@ class MusicService : MediaBrowserServiceCompat() {
         clientPackageName: String,
         clientUid: Int,
         rootHints: Bundle?
-    ): BrowserRoot? {
+    ): BrowserRoot {
         return BrowserRoot(MEDIA_ROOT_ID, null)
     }
 

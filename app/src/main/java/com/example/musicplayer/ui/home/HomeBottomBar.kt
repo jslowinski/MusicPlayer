@@ -33,7 +33,6 @@ import com.example.musicplayer.exoplayer.toSong
 import com.example.musicplayer.ui.viewmodels.MainViewModel
 import com.google.accompanist.coil.rememberCoilPainter
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun HomeBottomBar(
     modifier: Modifier = Modifier,

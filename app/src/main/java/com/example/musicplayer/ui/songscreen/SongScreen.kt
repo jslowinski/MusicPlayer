@@ -47,7 +47,6 @@ import com.google.accompanist.insets.systemBarsPadding
 import kotlin.math.roundToInt
 
 @ExperimentalMaterialApi
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun SongScreen(
     backPressedDispatcher: OnBackPressedDispatcher,
@@ -143,10 +142,10 @@ fun SongScreenBody(
 
     var sliderIsChanging by remember { mutableStateOf(false) }
 
-    var localSliderValue by remember { mutableStateOf(0f) }
+    var localSliderValue by remember { mutableFloatStateOf(0f) }
 
     var localSongValue by remember {
-        mutableStateOf(0f)
+        mutableFloatStateOf(0f)
     }
 
     val sliderProgress =
@@ -473,7 +472,7 @@ fun VinylAnimation(
     painter: Painter
 ) {
     var currentRotation by remember {
-        mutableStateOf(0f)
+        mutableFloatStateOf(0f)
     }
 
     val rotation = remember {
