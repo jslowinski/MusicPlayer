@@ -20,7 +20,11 @@ import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -82,7 +86,7 @@ class MusicService : MediaBrowserServiceCompat() {
         ) {
             currentSongDuration = exoPlayer.duration
         }
-//
+
         val musicPlaybackPreparer = MusicPlaybackPrepared(musicSource) {
             currentPlayingSong = it
             preparePlayer(
@@ -112,7 +116,7 @@ class MusicService : MediaBrowserServiceCompat() {
         itemToPlay: MediaMetadataCompat?,
         playNow: Boolean
     ) {
-        val curSongIndex = if(currentPlayingSong == null) 0 else songs.indexOf(itemToPlay)
+        val curSongIndex = if (currentPlayingSong == null) 0 else songs.indexOf(itemToPlay)
         exoPlayer.setMediaSource(musicSource.asMediaSource(dataSourceFactory))
         exoPlayer.prepare()
         exoPlayer.seekTo(curSongIndex, 0L)
@@ -143,12 +147,12 @@ class MusicService : MediaBrowserServiceCompat() {
         parentId: String,
         result: Result<MutableList<MediaBrowserCompat.MediaItem>>
     ) {
-        when(parentId) {
+        when (parentId) {
             MEDIA_ROOT_ID -> {
                 val resultsSent = musicSource.whenReady { isInitialized ->
-                    if(isInitialized) {
+                    if (isInitialized) {
                         result.sendResult(musicSource.asMediaItems())
-                        if(!isPlayerInitialize && musicSource.songs.isNotEmpty()) {
+                        if (!isPlayerInitialize && musicSource.songs.isNotEmpty()) {
                             preparePlayer(musicSource.songs, musicSource.songs[0], false)
                             isPlayerInitialize = true
                         }
@@ -157,7 +161,7 @@ class MusicService : MediaBrowserServiceCompat() {
                         result.sendResult(null)
                     }
                 }
-                if(!resultsSent) {
+                if (!resultsSent) {
                     result.detach()
                 }
             }

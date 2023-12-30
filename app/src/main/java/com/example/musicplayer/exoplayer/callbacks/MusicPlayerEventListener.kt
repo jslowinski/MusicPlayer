@@ -1,8 +1,6 @@
 package com.example.musicplayer.exoplayer.callbacks
 
-import android.widget.Toast
 import com.example.musicplayer.exoplayer.MusicService
-import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.Player
 
 class MusicPlayerEventListener(

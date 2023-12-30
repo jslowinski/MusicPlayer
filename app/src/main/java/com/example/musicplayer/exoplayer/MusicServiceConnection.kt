@@ -10,11 +10,9 @@ import android.support.v4.media.session.PlaybackStateCompat
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.example.musicplayer.data.entities.Song
 import com.example.musicplayer.other.Constants.NETWORK_FAILURE
 import com.example.musicplayer.other.Event
 import com.example.musicplayer.other.Resource
-import javax.inject.Inject
 
 class MusicServiceConnection(
     context: Context

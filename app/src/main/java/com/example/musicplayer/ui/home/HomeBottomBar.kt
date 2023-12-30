@@ -3,19 +3,31 @@ package com.example.musicplayer.ui.home
 
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,12 +38,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.rememberAsyncImagePainter
 import com.example.musicplayer.R
 import com.example.musicplayer.data.entities.Song
 import com.example.musicplayer.exoplayer.isPlaying
 import com.example.musicplayer.exoplayer.toSong
 import com.example.musicplayer.ui.viewmodels.MainViewModel
-import com.google.accompanist.coil.rememberCoilPainter
 
 @Composable
 fun HomeBottomBar(
@@ -59,6 +71,7 @@ fun HomeBottomBar(
                                     offsetX > 0 -> {
                                         viewModel.skipToPreviousSong()
                                     }
+
                                     offsetX < 0 -> {
                                         viewModel.skipToNextSong()
                                     }
@@ -111,7 +124,7 @@ fun HomeBottomBarItem(
             modifier = Modifier.fillMaxWidth()
         ) {
             Image(
-                painter = rememberCoilPainter(song.imageUrl),
+                painter = rememberAsyncImagePainter(song.imageUrl),
                 contentDescription = song.title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -146,8 +159,8 @@ fun HomeBottomBarItem(
 
                 )
             }
-            val painter = rememberCoilPainter(
-                request = if (playbackStateCompat?.isPlaying == false) {
+            val painter = rememberAsyncImagePainter(
+                if (playbackStateCompat?.isPlaying == false) {
                     R.drawable.ic_round_play_arrow
                 } else {
                     R.drawable.ic_round_pause

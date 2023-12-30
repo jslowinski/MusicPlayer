@@ -1,9 +1,8 @@
 package com.example.musicplayer.ui.viewmodels
 
 import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
@@ -16,7 +15,7 @@ import com.example.musicplayer.other.Constants.UPDATE_PLAYER_POSITION_INTERVAL
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -26,7 +25,7 @@ class SongViewModel @Inject constructor(
 
     private val playbackState = musicServiceConnection.playbackState
 
-    var currentPlaybackPosition by mutableStateOf(0L)
+    var currentPlaybackPosition by mutableLongStateOf(0L)
 
     val currentPlayerPosition: Float
         get() {

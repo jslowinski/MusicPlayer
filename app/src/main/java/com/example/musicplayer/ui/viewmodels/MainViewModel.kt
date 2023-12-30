@@ -6,8 +6,6 @@ import android.support.v4.media.MediaMetadataCompat.METADATA_KEY_MEDIA_ID
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.musicplayer.data.entities.Song
 import com.example.musicplayer.exoplayer.MusicServiceConnection
@@ -17,8 +15,6 @@ import com.example.musicplayer.exoplayer.isPrepared
 import com.example.musicplayer.other.Constants.MEDIA_ROOT_ID
 import com.example.musicplayer.other.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 @HiltViewModel
@@ -26,7 +22,7 @@ class MainViewModel @Inject constructor(
     private val musicServiceConnection: MusicServiceConnection
 ) : ViewModel() {
 
-    var mediaItems = mutableStateOf<Resource<List<Song>>>(Resource.Loading(null))
+    var mediaItems by mutableStateOf<Resource<List<Song>>>(Resource.Loading(null))
 
     var showPlayerFullScreen by mutableStateOf(false)
 
@@ -42,7 +38,7 @@ class MainViewModel @Inject constructor(
     val playbackState = musicServiceConnection.playbackState
 
     init {
-        mediaItems.value = (Resource.Loading(null))
+        mediaItems = Resource.Loading(null)
         musicServiceConnection.subscribe(
             MEDIA_ROOT_ID,
             object : MediaBrowserCompat.SubscriptionCallback() {
@@ -60,11 +56,10 @@ class MainViewModel @Inject constructor(
                             it.description.iconUri.toString()
                         )
                     }
-                    mediaItems.value = Resource.Success(items)
+                    mediaItems = Resource.Success(items)
                 }
             })
     }
-
 
 
     fun skipToNextSong() {
@@ -90,9 +85,11 @@ class MainViewModel @Inject constructor(
                     playbackState.isPlaying -> {
                         if (toggle) musicServiceConnection.transportController.pause()
                     }
+
                     playbackState.isPlayEnabled -> {
                         musicServiceConnection.transportController.play()
                     }
+
                     else -> Unit
                 }
             }
