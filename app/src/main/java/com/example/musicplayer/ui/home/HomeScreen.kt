@@ -23,6 +23,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -54,7 +55,6 @@ fun HomeScreen(
     Surface(modifier = Modifier.fillMaxSize()) {
         HomeContent(
             modifier = Modifier.fillMaxSize(),
-            music = viewModel.mediaItems,
             viewModel = viewModel
         )
     }
@@ -64,7 +64,6 @@ fun HomeScreen(
 @Composable
 fun HomeContent(
     modifier: Modifier = Modifier,
-    music: Resource<List<Song>>,
     viewModel: MainViewModel
 ) {
     Column(modifier = modifier) {
@@ -79,6 +78,12 @@ fun HomeContent(
             backgroundColor = appBarColor,
             modifier = Modifier.fillMaxWidth()
         )
+        LaunchedEffect(Unit) {
+            viewModel.getMusic()
+        }
+
+        val music by viewModel.mediaItems.collectAsState()
+
         when (music) {
             is Resource.Success -> {
                 Box(

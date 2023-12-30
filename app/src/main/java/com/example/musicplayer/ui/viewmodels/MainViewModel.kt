@@ -15,14 +15,16 @@ import com.example.musicplayer.exoplayer.isPrepared
 import com.example.musicplayer.other.Constants.MEDIA_ROOT_ID
 import com.example.musicplayer.other.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val musicServiceConnection: MusicServiceConnection
 ) : ViewModel() {
-
-    var mediaItems by mutableStateOf<Resource<List<Song>>>(Resource.Loading(null))
+    private val _mediaItems = MutableStateFlow<Resource<List<Song>>>(Resource.Loading(null))
+    val mediaItems: StateFlow<Resource<List<Song>>> = _mediaItems
 
     var showPlayerFullScreen by mutableStateOf(false)
 
@@ -37,8 +39,7 @@ class MainViewModel @Inject constructor(
 
     val playbackState = musicServiceConnection.playbackState
 
-    init {
-        mediaItems = Resource.Loading(null)
+    fun getMusic() {
         musicServiceConnection.subscribe(
             MEDIA_ROOT_ID,
             object : MediaBrowserCompat.SubscriptionCallback() {
@@ -56,7 +57,7 @@ class MainViewModel @Inject constructor(
                             it.description.iconUri.toString()
                         )
                     }
-                    mediaItems = Resource.Success(items)
+                    _mediaItems.value = Resource.Success(items)
                 }
             })
     }
