@@ -1,28 +1,70 @@
 package com.example.musicplayer.ui.songscreen
 
-import android.graphics.Bitmap
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.OnBackPressedDispatcher
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.*
+import androidx.compose.material.ContentAlpha
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.FractionalThreshold
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.LocalContentAlpha
+import androidx.compose.material.LocalContentColor
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ProgressIndicatorDefaults
+import androidx.compose.material.Slider
+import androidx.compose.material.SliderDefaults
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.rounded.Forward10
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.Replay10
+import androidx.compose.material.icons.rounded.SkipNext
+import androidx.compose.material.icons.rounded.SkipPrevious
+import androidx.compose.material.rememberSwipeableState
+import androidx.compose.material.swipeable
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.*
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -31,18 +73,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.ImageLoader
-import coil.bitmap.BitmapPool
+import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import coil.size.Size
-import coil.transform.Transformation
 import com.example.musicplayer.R
 import com.example.musicplayer.data.entities.Song
 import com.example.musicplayer.exoplayer.toSong
 import com.example.musicplayer.ui.theme.roundedShape
 import com.example.musicplayer.ui.viewmodels.MainViewModel
 import com.example.musicplayer.ui.viewmodels.SongViewModel
-import com.google.accompanist.coil.rememberCoilPainter
 import com.google.accompanist.insets.systemBarsPadding
 import kotlin.math.roundToInt
 
@@ -98,41 +136,15 @@ fun SongScreenBody(
 
     val backgroundColor = MaterialTheme.colors.background
 
-    var dominantColor by remember {
-        mutableStateOf(backgroundColor)
-    }
+    var dominantColor by remember { mutableStateOf(Color.Transparent) }
 
     val context = LocalContext.current
 
-    val imageLoader = ImageLoader(context)
-
-    val request = ImageRequest.Builder(context)
-        .data(song.imageUrl)
-        .build()
-
-    val imagePainter = rememberCoilPainter(
-        request = request,
-        requestBuilder = {
-            transformations(
-                object : Transformation {
-                    override fun key(): String {
-                        return song.imageUrl
-                    }
-
-                    override suspend fun transform(
-                        pool: BitmapPool,
-                        input: Bitmap,
-                        size: Size
-                    ): Bitmap {
-                        songViewModel.calculateColorPalette(input) {
-                            dominantColor = it
-                        }
-                        return input
-                    }
-                }
-            )
-        },
-        fadeIn = true
+    val imagePainter = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(song.imageUrl)
+            .crossfade(true)
+            .build()
     )
 
     val iconResId =
@@ -307,13 +319,6 @@ fun SongScreenContent(
                                 .aspectRatio(1f)
 
                         ) {
-//                            Image(
-//                                painter = imagePainter,
-//                                contentDescription = "Song thumbnail",
-//                                contentScale = ContentScale.Crop,
-//                                modifier = Modifier
-//                                    .fillMaxSize()
-//                            )
                             VinylAnimation(painter = imagePainter, isSongPlaying = isSongPlaying)
                         }
 

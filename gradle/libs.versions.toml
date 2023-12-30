@@ -1,0 +1,112 @@
+[versions]
+accompanist-pager = "0.32.0"
+accompanist-insets = "0.30.1"
+accompanist-systemuicontroller = "0.32.0"
+activity = "1.8.2"
+appcompat = "1.6.1"
+bom-compose = "2023.10.01"
+coil = "2.5.0"
+constraintlayout-compose = "1.0.1"
+core-ktx = "1.12.0"
+exoplayer = "2.19.1"
+bom-firebase = "32.7.0"
+google-services = "4.4.0"
+gradle = "8.2.0"
+hilt = "2.48"
+hilt-compiler = "1.1.0"
+hilt-navigation-compose = "1.1.0"
+kotlin-gradle-plugin = "1.9.21"
+kotlinx-coroutines = "1.7.3"
+lifecycle = "2.6.2"
+lifecycle-extensions = "2.2.0"
+material = "1.11.0"
+navigation-compose = "2.7.4"
+palette-ktx = "1.0.0"
+
+[libraries]
+accompanist-pager = { module = "com.google.accompanist:accompanist-pager", version.ref = "accompanist-pager" }
+accompanist-insets = { module = "com.google.accompanist:accompanist-insets", version.ref = "accompanist-insets" }
+accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanist-systemuicontroller" }
+activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity" }
+appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+coil = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+compose-bom = { module = "androidx.compose:compose-bom", version.ref = "bom-compose" }
+compose-ui = { module = "androidx.compose.ui:ui" }
+compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+compose-material = { module = "androidx.compose.material:material" }
+compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
+compose-foundation = { module = "androidx.compose.foundation:foundation" }
+compose-runtime = { module = "androidx.compose.runtime:runtime" }
+compose-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata" }
+constraintlayout-compose = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "constraintlayout-compose" }
+core-ktx = { module = "androidx.core:core-ktx", version.ref = "core-ktx" }
+exoplayer-core = { module = "com.google.android.exoplayer:exoplayer-core", version.ref = "exoplayer" }
+extension-mediasession = { module = "com.google.android.exoplayer:extension-mediasession", version.ref = "exoplayer" }
+exoplayer-ui = { module = "com.google.android.exoplayer:exoplayer-ui", version.ref = "exoplayer" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "bom-firebase" }
+firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
+firebase-storage = { module = "com.google.firebase:firebase-storage" }
+google-services = { module = "com.google.gms:google-services", version.ref = "google-services" }
+gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
+hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
+hilt-android-gradle-plugin = { module = "com.google.dagger:hilt-android-gradle-plugin", version.ref = "hilt" }
+hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hilt-compiler" }
+hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hilt-navigation-compose" }
+kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin-gradle-plugin" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "kotlinx-coroutines" }
+lifecycle-extensions = { module = "androidx.lifecycle:lifecycle-extensions", version.ref = "lifecycle-extensions" }
+lifecycle-livedata = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycle" }
+lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
+lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
+lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+material = { module = "com.google.android.material:material", version.ref = "material" }
+navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation-compose" }
+palette-ktx = { module = "androidx.palette:palette-ktx", version.ref = "palette-ktx" }
+
+
+[bundles]
+accompanist = [
+    "accompanist-insets",
+    "accompanist-pager",
+    "accompanist-systemuicontroller"
+]
+compose = [
+    "compose-ui",
+    "compose-ui-tooling",
+    "compose-material",
+    "compose-material-icons-extended",
+    "compose-foundation",
+    "compose-runtime",
+    "compose-runtime-livedata"
+]
+coroutines = [
+    "kotlinx-coroutines-android",
+    "kotlinx-coroutines-core",
+    "kotlinx-coroutines-play-services"
+]
+exoplayer = [
+    "exoplayer-core",
+    "exoplayer-ui",
+    "extension-mediasession"
+]
+firebase = [
+    "firebase-firestore",
+    "firebase-storage"
+]
+hilt = [
+    "hilt-android",
+    "hilt-navigation-compose"
+]
+hilt-kapt = [
+    "hilt-android-compiler",
+    "hilt-compiler",
+]
+lifecycle = [
+    "lifecycle-livedata",
+    "lifecycle-runtime",
+    "lifecycle-viewmodel",
+    "lifecycle-viewmodel-compose"
+]

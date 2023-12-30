@@ -3,17 +3,16 @@ package com.example.musicplayer.exoplayer
 import android.app.PendingIntent
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
+import android.graphics.drawable.BitmapDrawable
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
-import com.bumptech.glide.Glide
+import coil.ImageLoader
+import coil.request.ImageRequest
 import com.example.musicplayer.R
 import com.example.musicplayer.other.Constants.NOTIFICATION_CHANNEL_ID
 import com.example.musicplayer.other.Constants.NOTIFICATION_ID
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
-import com.bumptech.glide.request.target.CustomTarget
-import com.bumptech.glide.request.transition.Transition
 
 class MusicNotificationManger(
     private val context: Context,
@@ -31,7 +30,7 @@ class MusicNotificationManger(
             NOTIFICATION_ID,
             NOTIFICATION_CHANNEL_ID,
             DescriptionAdapter(mediaController)
-            )
+        )
             .setSmallIconResourceId(R.drawable.ic_music)
             .setNotificationListener(notificationListener)
             .setChannelNameResourceId(R.string.notification_channel_name)
@@ -64,18 +63,16 @@ class MusicNotificationManger(
             player: Player,
             callback: PlayerNotificationManager.BitmapCallback
         ): Bitmap? {
-            Glide.with(context).asBitmap()
-                .load(mediaController.metadata.description.iconUri)
-                .into(object : CustomTarget<Bitmap>() {
-                    override fun onResourceReady(
-                        resource: Bitmap,
-                        transition: Transition<in Bitmap>?
-                    ) {
-                        callback.onBitmap(resource)
-                    }
+            val request = ImageRequest.Builder(context)
+                .data(mediaController.metadata.description.iconUri)
+                .target { drawable ->
+                    val bitmap = (drawable as BitmapDrawable).bitmap
+                    callback.onBitmap(bitmap)
+                }
+                .build()
 
-                    override fun onLoadCleared(placeholder: Drawable?) = Unit
-                })
+            ImageLoader(context).enqueue(request)
+
             return null
         }
     }

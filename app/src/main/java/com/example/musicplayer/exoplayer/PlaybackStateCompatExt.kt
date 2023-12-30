@@ -3,20 +3,24 @@ package com.example.musicplayer.exoplayer
 import android.os.SystemClock
 import android.support.v4.media.session.PlaybackStateCompat
 import android.support.v4.media.session.PlaybackStateCompat.STATE_PLAYING
+import android.support.v4.media.session.PlaybackStateCompat.STATE_BUFFERING
+import android.support.v4.media.session.PlaybackStateCompat.ACTION_PLAY
+import android.support.v4.media.session.PlaybackStateCompat.ACTION_PLAY_PAUSE
+import android.support.v4.media.session.PlaybackStateCompat.STATE_PAUSED
 
 inline val PlaybackStateCompat.isPrepared
-    get() = state == PlaybackStateCompat.STATE_BUFFERING ||
-            state == PlaybackStateCompat.STATE_PLAYING ||
-            state == PlaybackStateCompat.STATE_PAUSED
+    get() = state == STATE_BUFFERING ||
+            state == STATE_PLAYING ||
+            state == STATE_PAUSED
 
 inline val PlaybackStateCompat.isPlaying
-    get() = state == PlaybackStateCompat.STATE_BUFFERING ||
-            state == PlaybackStateCompat.STATE_PLAYING
+    get() = state == STATE_BUFFERING ||
+            state == STATE_PLAYING
 
 inline val PlaybackStateCompat.isPlayEnabled
-    get() = actions and PlaybackStateCompat.ACTION_PLAY != 0L ||
-            (actions and PlaybackStateCompat.ACTION_PLAY_PAUSE != 0L &&
-                    state == PlaybackStateCompat.STATE_PAUSED)
+    get() = actions and ACTION_PLAY != 0L ||
+            (actions and ACTION_PLAY_PAUSE != 0L &&
+                    state == STATE_PAUSED)
 
 inline val PlaybackStateCompat.currentPlaybackPosition: Long
     get() = if (state == STATE_PLAYING) {

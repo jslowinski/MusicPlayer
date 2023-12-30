@@ -4,7 +4,6 @@ import com.example.musicplayer.data.entities.Song
 import com.example.musicplayer.other.Constants.SONG_COLLECTION
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
-import java.lang.Exception
 
 class MusicDatabase {
 

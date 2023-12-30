@@ -15,7 +15,8 @@ class MusicPlaybackPrepared(
 ) : MediaSessionConnector.PlaybackPreparer {
 
 
-    override fun onCommand(p0: Player, p1: String, p2: Bundle?, p3: ResultReceiver?): Boolean = false
+    override fun onCommand(p0: Player, p1: String, p2: Bundle?, p3: ResultReceiver?): Boolean =
+        false
 
     override fun getSupportedPrepareActions(): Long {
         return PlaybackStateCompat.ACTION_PREPARE_FROM_MEDIA_ID or
