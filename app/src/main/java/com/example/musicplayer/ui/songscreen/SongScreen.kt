@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.ExperimentalMaterialApi
@@ -81,8 +82,6 @@ import com.example.musicplayer.exoplayer.toSong
 import com.example.musicplayer.ui.theme.roundedShape
 import com.example.musicplayer.ui.viewmodels.MainViewModel
 import com.example.musicplayer.ui.viewmodels.SongViewModel
-import com.google.accompanist.insets.systemBarsPadding
-import kotlin.math.roundToInt
 
 @ExperimentalMaterialApi
 @Composable
@@ -94,12 +93,9 @@ fun SongScreen(
     val song = mainViewModel.currentPlayingSong.value
     AnimatedVisibility(
         visible = song != null && mainViewModel.showPlayerFullScreen,
-        enter = slideInVertically(
-            initialOffsetY = { it }
-        ),
-        exit = slideOutVertically(
-            targetOffsetY = { it }
-        )) {
+        enter = slideInVertically(initialOffsetY = { it }),
+        exit = slideOutVertically(targetOffsetY = { it })
+    ) {
         if (song != null) {
             SongScreenBody(
                 song = song.toSong()!!,
@@ -122,8 +118,7 @@ fun SongScreenBody(
     val swipeableState = rememberSwipeableState(initialValue = 0)
     val endAnchor = LocalConfiguration.current.screenHeightDp * LocalDensity.current.density
     val anchors = mapOf(
-        0f to 0,
-        endAnchor to 1
+        0f to 0, endAnchor to 1
     )
 
     val backCallback = remember {
@@ -136,15 +131,12 @@ fun SongScreenBody(
 
     val backgroundColor = MaterialTheme.colors.background
 
-    var dominantColor by remember { mutableStateOf(Color.Transparent) }
+    val dominantColor by remember { mutableStateOf(Color.Transparent) }
 
     val context = LocalContext.current
 
     val imagePainter = rememberAsyncImagePainter(
-        model = ImageRequest.Builder(LocalContext.current)
-            .data(song.imageUrl)
-            .crossfade(true)
-            .build()
+        model = ImageRequest.Builder(context).data(song.imageUrl).crossfade(true).build()
     )
 
     val iconResId =
@@ -155,10 +147,6 @@ fun SongScreenBody(
     var sliderIsChanging by remember { mutableStateOf(false) }
 
     var localSliderValue by remember { mutableFloatStateOf(0f) }
-
-    var localSongValue by remember {
-        mutableFloatStateOf(0f)
-    }
 
     val sliderProgress =
         if (sliderIsChanging) localSliderValue else songViewModel.currentPlayerPosition
@@ -179,8 +167,7 @@ fun SongScreenBody(
                 mainViewModel.showPlayerFullScreen = false
             }
         }
-        SongScreenContent(
-            song = song,
+        SongScreenContent(song = song,
             isSongPlaying = isSongPlaying,
             imagePainter = imagePainter,
             dominantColor = dominantColor,
@@ -188,7 +175,6 @@ fun SongScreenBody(
             currentTime = songViewModel.currentPlaybackFormattedPosition,
             totalTime = songViewModel.currentSongFormattedPosition,
             playPauseIcon = iconResId,
-            yOffset = swipeableState.offset.value.roundToInt(),
             playOrToggleSong = { mainViewModel.playOrToggleSong(song, true) },
             playNextSong = { mainViewModel.skipToNextSong() },
             playPreviousSong = { mainViewModel.skipToPreviousSong() },
@@ -212,8 +198,7 @@ fun SongScreenBody(
             },
             onClose = {
                 mainViewModel.showPlayerFullScreen = false
-            }
-        )
+            })
     }
 
     LaunchedEffect("playbackPosition") {
@@ -240,7 +225,6 @@ fun SongScreenContent(
     currentTime: String,
     totalTime: String,
     @DrawableRes playPauseIcon: Int,
-    yOffset: Int,
     playOrToggleSong: () -> Unit,
     playNextSong: () -> Unit,
     playPreviousSong: () -> Unit,
@@ -255,13 +239,11 @@ fun SongScreenContent(
 
     val gradientColors = if (isSystemInDarkTheme()) {
         listOf(
-            dominantColor,
-            MaterialTheme.colors.background
+            dominantColor, MaterialTheme.colors.background
         )
     } else {
         listOf(
-            MaterialTheme.colors.background,
-            MaterialTheme.colors.background
+            MaterialTheme.colors.background, MaterialTheme.colors.background
         )
     }
 
@@ -282,8 +264,7 @@ fun SongScreenContent(
     )
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
         Surface {
             Box(
@@ -308,8 +289,7 @@ fun SongScreenContent(
                         )
                     }
                     Column(
-                        modifier = Modifier
-                            .padding(horizontal = 24.dp)
+                        modifier = Modifier.padding(horizontal = 24.dp)
                     ) {
                         Box(
                             modifier = Modifier
@@ -330,16 +310,14 @@ fun SongScreenContent(
                             overflow = TextOverflow.Ellipsis
                         )
 
-                        Text(
-                            song.subtitle,
+                        Text(song.subtitle,
                             style = MaterialTheme.typography.subtitle1,
                             color = MaterialTheme.colors.onBackground,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.graphicsLayer {
                                 alpha = 0.60f
-                            }
-                        )
+                            })
 
                         Column(
                             modifier = Modifier
@@ -348,8 +326,7 @@ fun SongScreenContent(
                         ) {
                             Slider(
                                 value = playbackProgress,
-                                modifier = Modifier
-                                    .fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth(),
                                 colors = sliderColors,
                                 onValueChange = onSliderChange,
                                 onValueChangeFinished = onSliderChangeFinished
@@ -361,14 +338,12 @@ fun SongScreenContent(
                             ) {
                                 CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
                                     Text(
-                                        currentTime,
-                                        style = MaterialTheme.typography.body2
+                                        currentTime, style = MaterialTheme.typography.body2
                                     )
                                 }
                                 CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
                                     Text(
-                                        totalTime,
-                                        style = MaterialTheme.typography.body2
+                                        totalTime, style = MaterialTheme.typography.body2
                                     )
                                 }
                             }
@@ -438,9 +413,7 @@ fun SongScreenContent(
 
 @Composable
 fun Vinyl(
-    modifier: Modifier = Modifier,
-    rotationDegrees: Float = 0f,
-    painter: Painter
+    modifier: Modifier = Modifier, rotationDegrees: Float = 0f, painter: Painter
 ) {
     Box(
         modifier = modifier
@@ -472,9 +445,7 @@ fun Vinyl(
 
 @Composable
 fun VinylAnimation(
-    modifier: Modifier = Modifier,
-    isSongPlaying: Boolean = true,
-    painter: Painter
+    modifier: Modifier = Modifier, isSongPlaying: Boolean = true, painter: Painter
 ) {
     var currentRotation by remember {
         mutableFloatStateOf(0f)
@@ -487,10 +458,8 @@ fun VinylAnimation(
     LaunchedEffect(isSongPlaying) {
         if (isSongPlaying) {
             rotation.animateTo(
-                targetValue = currentRotation + 360f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(3000, easing = LinearEasing),
-                    repeatMode = RepeatMode.Restart
+                targetValue = currentRotation + 360f, animationSpec = infiniteRepeatable(
+                    animation = tween(3000, easing = LinearEasing), repeatMode = RepeatMode.Restart
                 )
             ) {
                 currentRotation = value
@@ -498,10 +467,8 @@ fun VinylAnimation(
         } else {
             if (currentRotation > 0f) {
                 rotation.animateTo(
-                    targetValue = currentRotation + 50,
-                    animationSpec = tween(
-                        1250,
-                        easing = LinearOutSlowInEasing
+                    targetValue = currentRotation + 50, animationSpec = tween(
+                        1250, easing = LinearOutSlowInEasing
                     )
                 ) {
                     currentRotation = value
@@ -510,7 +477,7 @@ fun VinylAnimation(
         }
     }
 
-    Vinyl(painter = painter, rotationDegrees = rotation.value)
+    Vinyl(modifier = modifier, painter = painter, rotationDegrees = rotation.value)
 }
 
 

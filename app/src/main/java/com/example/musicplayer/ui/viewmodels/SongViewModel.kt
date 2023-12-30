@@ -3,7 +3,6 @@ package com.example.musicplayer.ui.viewmodels
 import android.graphics.Bitmap
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
@@ -55,7 +54,6 @@ class SongViewModel @Inject constructor(
     }
 
     fun calculateColorPalette(drawable: Bitmap, onFinish: (Color) -> Unit) {
-
         Palette.from(drawable).generate { palette ->
             palette?.dominantSwatch?.rgb?.let { colorValue ->
                 onFinish(Color(colorValue))
