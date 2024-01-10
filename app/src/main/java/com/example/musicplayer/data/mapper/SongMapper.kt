@@ -13,15 +13,6 @@ fun SongDto.toSong() =
         imageUrl = imageUrl
     )
 
-fun MusicDto.toSong() =
-    Song(
-        mediaId = id,
-        title = title,
-        subtitle = artist,
-        songUrl = source,
-        imageUrl = image
-    )
-
 fun MediaItem.toSong() =
     Song(
         mediaId = mediaId,
