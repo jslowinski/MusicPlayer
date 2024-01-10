@@ -1,6 +1,6 @@
-package com.example.musicplayer.data.entities
+package com.example.musicplayer.data.dto
 
-data class Song(
+data class SongDto(
     val mediaId: String = "",
     val title: String = "",
     val subtitle: String = "",
