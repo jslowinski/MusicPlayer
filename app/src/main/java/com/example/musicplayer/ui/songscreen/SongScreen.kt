@@ -1,17 +1,6 @@
 package com.example.musicplayer.ui.songscreen
 
-import androidx.activity.OnBackPressedCallback
-import androidx.activity.OnBackPressedDispatcher
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -51,17 +40,13 @@ import androidx.compose.material.rememberSwipeableState
 import androidx.compose.material.swipeable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -73,37 +58,29 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.musicplayer.R
-import com.example.musicplayer.data.entities.Song
-import com.example.musicplayer.exoplayer.toSong
-import com.example.musicplayer.ui.theme.roundedShape
-import com.example.musicplayer.ui.viewmodels.MainViewModel
-import com.example.musicplayer.ui.viewmodels.SongViewModel
+import com.example.musicplayer.domain.model.Song
+import com.example.musicplayer.other.MusicControllerUiState
+import com.example.musicplayer.other.PlayerState
+import com.example.musicplayer.other.toTime
+import com.example.musicplayer.ui.songscreen.component.AnimatedVinyl
 
 @ExperimentalMaterialApi
 @Composable
 fun SongScreen(
-    backPressedDispatcher: OnBackPressedDispatcher,
-    mainViewModel: MainViewModel = hiltViewModel(),
-    songViewModel: SongViewModel = hiltViewModel()
+    onEvent: (SongEvent) -> Unit,
+    musicControllerUiState: MusicControllerUiState,
+    onNavigateUp: () -> Unit,
 ) {
-    val song = mainViewModel.currentPlayingSong.value
-    AnimatedVisibility(
-        visible = song != null && mainViewModel.showPlayerFullScreen,
-        enter = slideInVertically(initialOffsetY = { it }),
-        exit = slideOutVertically(targetOffsetY = { it })
-    ) {
-        if (song != null) {
-            SongScreenBody(
-                song = song.toSong()!!,
-                backPressedDispatcher = backPressedDispatcher,
-                mainViewModel = mainViewModel,
-                songViewModel = songViewModel
-            )
-        }
+    if (musicControllerUiState.currentSong != null) {
+        SongScreenBody(
+            song = musicControllerUiState.currentSong,
+            onNavigateUp = onNavigateUp,
+            musicControllerUiState = musicControllerUiState,
+            onEvent = onEvent
+        )
     }
 }
 
@@ -111,23 +88,15 @@ fun SongScreen(
 @Composable
 fun SongScreenBody(
     song: Song,
-    backPressedDispatcher: OnBackPressedDispatcher,
-    mainViewModel: MainViewModel,
-    songViewModel: SongViewModel
+    onEvent: (SongEvent) -> Unit,
+    musicControllerUiState: MusicControllerUiState,
+    onNavigateUp: () -> Unit,
 ) {
     val swipeableState = rememberSwipeableState(initialValue = 0)
     val endAnchor = LocalConfiguration.current.screenHeightDp * LocalDensity.current.density
     val anchors = mapOf(
         0f to 0, endAnchor to 1
     )
-
-    val backCallback = remember {
-        object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                mainViewModel.showPlayerFullScreen = false
-            }
-        }
-    }
 
     val backgroundColor = MaterialTheme.colors.background
 
@@ -140,16 +109,7 @@ fun SongScreenBody(
     )
 
     val iconResId =
-        if (mainViewModel.songIsPlaying) R.drawable.ic_round_pause else R.drawable.ic_round_play_arrow
-
-    val isSongPlaying = mainViewModel.songIsPlaying
-
-    var sliderIsChanging by remember { mutableStateOf(false) }
-
-    var localSliderValue by remember { mutableFloatStateOf(0f) }
-
-    val sliderProgress =
-        if (sliderIsChanging) localSliderValue else songViewModel.currentPlayerPosition
+        if (musicControllerUiState.playerState == PlayerState.PLAYING) R.drawable.ic_round_pause else R.drawable.ic_round_play_arrow
 
     Box(
         modifier = Modifier
@@ -163,55 +123,36 @@ fun SongScreenBody(
             )
     ) {
         if (swipeableState.currentValue >= 1) {
-            LaunchedEffect("key") {
-                mainViewModel.showPlayerFullScreen = false
+            LaunchedEffect(key1 = Unit) {
+                onNavigateUp()
             }
         }
-        SongScreenContent(song = song,
-            isSongPlaying = isSongPlaying,
+        SongScreenContent(
+            song = song,
+            isSongPlaying = musicControllerUiState.playerState == PlayerState.PLAYING,
             imagePainter = imagePainter,
             dominantColor = dominantColor,
-            playbackProgress = sliderProgress,
-            currentTime = songViewModel.currentPlaybackFormattedPosition,
-            totalTime = songViewModel.currentSongFormattedPosition,
+            currentTime = musicControllerUiState.currentPosition,
+            totalTime = musicControllerUiState.totalDuration,
             playPauseIcon = iconResId,
-            playOrToggleSong = { mainViewModel.playOrToggleSong(song, true) },
-            playNextSong = { mainViewModel.skipToNextSong() },
-            playPreviousSong = { mainViewModel.skipToPreviousSong() },
-            onSliderChange = { newPosition ->
-                localSliderValue = newPosition
-                sliderIsChanging = true
+            playOrToggleSong = {
+                onEvent(if (musicControllerUiState.playerState == PlayerState.PLAYING) SongEvent.PauseSong else SongEvent.ResumeSong)
             },
-            onSliderChangeFinished = {
-                mainViewModel.seekTo(songViewModel.currentSongDuration * localSliderValue)
-                sliderIsChanging = false
+            playNextSong = { onEvent(SongEvent.SkipToNextSong) },
+            playPreviousSong = { onEvent(SongEvent.SkipToPreviousSong) },
+            onSliderChange = { newPosition ->
+                onEvent(SongEvent.SeekSongToPosition(newPosition.toLong()))
             },
             onForward = {
-                songViewModel.currentPlaybackPosition.let { currentPosition ->
-                    mainViewModel.seekTo(currentPosition + 10 * 1000f)
-                }
+                onEvent(SongEvent.SeekSongToPosition(musicControllerUiState.currentPosition + 10 * 1000))
             },
             onRewind = {
-                songViewModel.currentPlaybackPosition.let { currentPosition ->
-                    mainViewModel.seekTo(if (currentPosition - 10 * 1000f < 0) 0f else currentPosition - 10 * 1000f)
+                musicControllerUiState.currentPosition.let { currentPosition ->
+                    onEvent(SongEvent.SeekSongToPosition(if (currentPosition - 10 * 1000 < 0) 0 else currentPosition - 10 * 1000))
                 }
             },
-            onClose = {
-                mainViewModel.showPlayerFullScreen = false
-            })
-    }
-
-    LaunchedEffect("playbackPosition") {
-        songViewModel.updateCurrentPlaybackPosition()
-    }
-
-    DisposableEffect(backPressedDispatcher) {
-        backPressedDispatcher.addCallback(backCallback)
-
-        onDispose {
-            backCallback.remove()
-            mainViewModel.showPlayerFullScreen = false
-        }
+            onClose = { onNavigateUp() }
+        )
     }
 }
 
@@ -221,22 +162,17 @@ fun SongScreenContent(
     isSongPlaying: Boolean,
     imagePainter: Painter,
     dominantColor: Color,
-    playbackProgress: Float,
-    currentTime: String,
-    totalTime: String,
+    currentTime: Long,
+    totalTime: Long,
     @DrawableRes playPauseIcon: Int,
     playOrToggleSong: () -> Unit,
     playNextSong: () -> Unit,
     playPreviousSong: () -> Unit,
     onSliderChange: (Float) -> Unit,
-    onSliderChangeFinished: () -> Unit,
     onRewind: () -> Unit,
     onForward: () -> Unit,
     onClose: () -> Unit
-
 ) {
-
-
     val gradientColors = if (isSystemInDarkTheme()) {
         listOf(
             dominantColor, MaterialTheme.colors.background
@@ -299,7 +235,7 @@ fun SongScreenContent(
                                 .aspectRatio(1f)
 
                         ) {
-                            VinylAnimation(painter = imagePainter, isSongPlaying = isSongPlaying)
+                            AnimatedVinyl(painter = imagePainter, isSongPlaying = isSongPlaying)
                         }
 
                         Text(
@@ -324,12 +260,13 @@ fun SongScreenContent(
                                 .fillMaxWidth()
                                 .padding(vertical = 24.dp)
                         ) {
+
                             Slider(
-                                value = playbackProgress,
+                                value = currentTime.toFloat(),
                                 modifier = Modifier.fillMaxWidth(),
+                                valueRange = 0f..totalTime.toFloat(),
                                 colors = sliderColors,
                                 onValueChange = onSliderChange,
-                                onValueChangeFinished = onSliderChangeFinished
                             )
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -338,12 +275,13 @@ fun SongScreenContent(
                             ) {
                                 CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
                                     Text(
-                                        currentTime, style = MaterialTheme.typography.body2
+                                        currentTime.toTime(),
+                                        style = MaterialTheme.typography.body2
                                     )
                                 }
                                 CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
                                     Text(
-                                        totalTime, style = MaterialTheme.typography.body2
+                                        totalTime.toTime(), style = MaterialTheme.typography.body2
                                     )
                                 }
                             }
@@ -411,73 +349,6 @@ fun SongScreenContent(
     }
 }
 
-@Composable
-fun Vinyl(
-    modifier: Modifier = Modifier, rotationDegrees: Float = 0f, painter: Painter
-) {
-    Box(
-        modifier = modifier
-            .aspectRatio(1.0f)
-            .clip(roundedShape)
-    ) {
-        // Vinyl background
-        Image(
-            modifier = Modifier
-                .fillMaxSize()
-                .rotate(rotationDegrees),
-            painter = painterResource(id = R.drawable.vinyl_background),
-            contentDescription = "Vinyl Background"
-        )
 
-        // Vinyl song cover
-        Image(
-            modifier = Modifier
-                .fillMaxSize(0.5f)
-                .rotate(rotationDegrees)
-                .aspectRatio(1.0f)
-                .align(Alignment.Center)
-                .clip(roundedShape),
-            painter = painter,
-            contentDescription = "Song cover"
-        )
-    }
-}
-
-@Composable
-fun VinylAnimation(
-    modifier: Modifier = Modifier, isSongPlaying: Boolean = true, painter: Painter
-) {
-    var currentRotation by remember {
-        mutableFloatStateOf(0f)
-    }
-
-    val rotation = remember {
-        Animatable(currentRotation)
-    }
-
-    LaunchedEffect(isSongPlaying) {
-        if (isSongPlaying) {
-            rotation.animateTo(
-                targetValue = currentRotation + 360f, animationSpec = infiniteRepeatable(
-                    animation = tween(3000, easing = LinearEasing), repeatMode = RepeatMode.Restart
-                )
-            ) {
-                currentRotation = value
-            }
-        } else {
-            if (currentRotation > 0f) {
-                rotation.animateTo(
-                    targetValue = currentRotation + 50, animationSpec = tween(
-                        1250, easing = LinearOutSlowInEasing
-                    )
-                ) {
-                    currentRotation = value
-                }
-            }
-        }
-    }
-
-    Vinyl(modifier = modifier, painter = painter, rotationDegrees = rotation.value)
-}
 
 

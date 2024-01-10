@@ -1,7 +1,6 @@
-package com.example.musicplayer.ui.home
+package com.example.musicplayer.ui.home.component
 
 
-import android.support.v4.media.session.PlaybackStateCompat
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -24,7 +23,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,30 +34,28 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.musicplayer.R
-import com.example.musicplayer.data.entities.Song
-import com.example.musicplayer.exoplayer.isPlaying
-import com.example.musicplayer.exoplayer.toSong
-import com.example.musicplayer.ui.viewmodels.MainViewModel
+import com.example.musicplayer.domain.model.Song
+import com.example.musicplayer.other.PlayerState
+import com.example.musicplayer.ui.home.HomeEvent
 
 @Composable
 fun HomeBottomBar(
     modifier: Modifier = Modifier,
-    viewModel: MainViewModel = hiltViewModel()
+    onEvent: (HomeEvent) -> Unit,
+    playerState: PlayerState?,
+    song: Song?,
+    onBarClick: () -> Unit
 ) {
 
     var offsetX by remember { mutableFloatStateOf(0f) }
-    val currentSong = viewModel.currentPlayingSong.value
-    val playbackStateCompat by viewModel.playbackState.observeAsState()
 
     AnimatedVisibility(
-        visible = currentSong != null,
+        visible = playerState != PlayerState.STOPPED,
         modifier = modifier
     ) {
-        if (currentSong != null) {
-            val song = currentSong.toSong()
+        if (song != null) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -68,11 +64,11 @@ fun HomeBottomBar(
                             onDragEnd = {
                                 when {
                                     offsetX > 0 -> {
-                                        viewModel.skipToPreviousSong()
+                                        onEvent(HomeEvent.SkipToPreviousSong)
                                     }
 
                                     offsetX < 0 -> {
-                                        viewModel.skipToNextSong()
+                                        onEvent(HomeEvent.SkipToNextSong)
                                     }
                                 }
                             },
@@ -91,9 +87,10 @@ fun HomeBottomBar(
                     ),
             ) {
                 HomeBottomBarItem(
-                    song = song!!,
-                    playbackStateCompat = playbackStateCompat,
-                    viewModel = viewModel
+                    song = song,
+                    onEvent = onEvent,
+                    playerState = playerState,
+                    onBarClick = onBarClick
                 )
             }
         }
@@ -104,17 +101,14 @@ fun HomeBottomBar(
 @Composable
 fun HomeBottomBarItem(
     song: Song,
-    playbackStateCompat: PlaybackStateCompat?,
-    viewModel: MainViewModel
+    onEvent: (HomeEvent) -> Unit,
+    playerState: PlayerState?,
+    onBarClick: () -> Unit
 ) {
-
-
     Box(
         modifier = Modifier
             .height(64.dp)
-            .clickable(onClick = {
-                viewModel.showPlayerFullScreen = true
-            })
+            .clickable(onClick = { onBarClick() })
 
     ) {
         Row(
@@ -159,10 +153,10 @@ fun HomeBottomBarItem(
                 )
             }
             val painter = rememberAsyncImagePainter(
-                if (playbackStateCompat?.isPlaying == false) {
-                    R.drawable.ic_round_play_arrow
-                } else {
+                if (playerState == PlayerState.PLAYING) {
                     R.drawable.ic_round_pause
+                } else {
+                    R.drawable.ic_round_play_arrow
                 }
             )
 
@@ -181,7 +175,13 @@ fun HomeBottomBarItem(
                             bounded = false,
                             radius = 24.dp
                         )
-                    ) { viewModel.playOrToggleSong(song, true) },
+                    ) {
+                        if (playerState == PlayerState.PLAYING) {
+                            onEvent(HomeEvent.PauseSong)
+                        } else {
+                            onEvent(HomeEvent.ResumeSong)
+                        }
+                    },
             )
 
         }

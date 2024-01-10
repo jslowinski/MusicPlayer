@@ -4,6 +4,7 @@ plugins {
     id("dagger.hilt.android.plugin")
     id("com.google.gms.google-services")
     id("kotlin-kapt")
+    kotlin("plugin.serialization") version "1.9.22"
 }
 
 android {
@@ -76,6 +77,7 @@ dependencies {
 
     // Dagger - Hilt
     implementation(libs.bundles.hilt)
+    implementation(libs.media3.ui)
     kapt(libs.bundles.hilt.kapt)
 
     // Firebase
@@ -83,5 +85,7 @@ dependencies {
     implementation(libs.bundles.firebase)
 
     // ExoPlayer
-    api(libs.bundles.exoplayer)
+//    api(libs.bundles.exoplayer)
+    implementation(libs.media3.exoplayer)
+    implementation(libs.media3.session)
 }
